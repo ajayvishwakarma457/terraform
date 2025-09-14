@@ -1,0 +1,39 @@
+🔹 Basics
+  1. What is IaC and why Terraform
+  2. Install Terraform & setup provider (AWS, Azure, GCP)
+  3. Core blocks: Provider, Resource, Data Source
+  4. Variables & Outputs
+  5. State file basics (terraform.tfstate)
+  6. Basic commands: init, plan, apply, destroy
+
+
+🔹 Intermediate
+  1. Input variables (types, tfvars)
+  2. Outputs & reusability
+  3. Resource dependencies (depends_on)
+  4. Remote state (S3 + DynamoDB lock)
+  5. Provisioners (local-exec, remote-exec)
+  6. Lifecycle rules (create_before_destroy, prevent_destroy)
+
+
+🔹 Advanced
+  1. Modules (local & registry)
+  2. Workspaces (dev, stage, prod)
+  3. Loops (for_each, count, dynamic)
+  4. Data sources (e.g., fetch AMI IDs)
+  5. Advanced state management (terraform state commands)
+  6. Backends (S3, Consul, Terraform Cloud)
+
+🔹 Industry Practices
+  1. Standard project structure (modules + environments)
+  2. Remote state + version control (Git)
+  3. Secrets management (AWS Secrets Manager / Vault)
+  4. Testing (Terratest, Checkov)
+  5. Policy as Code (Sentinel, OPA)
+  6. CI/CD pipelines (GitHub Actions, GitLab, Jenkins)
+
+🔹 Expert
+  1. Terraform Cloud / Enterprise (workspaces, teams, governance)
+  2. Drift detection & compliance checks
+  3. Cost estimation (Infracost)
+  4. Multi-cloud deployments
