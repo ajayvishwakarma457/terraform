@@ -1,0 +1,57 @@
+terraform-practice/
+│── backend.tf              # Remote backend config (S3 + DynamoDB)
+│── provider.tf             # Provider & versions
+│── versions.tf             # Terraform + provider version locks
+│── variables.tf            # Input variables
+│── outputs.tf              # Outputs from resources
+│── terraform.tfvars        # Values for variables (not committed to git if sensitive)
+│── main.tf                 # Root module (calls sub-modules)
+
+│── modules/                # Reusable modules
+│   ├── vpc/                
+│   │   ├── main.tf         # VPC resources
+│   │   ├── variables.tf    # Inputs for VPC
+│   │   ├── outputs.tf      # Outputs from VPC
+│   │   └── README.md
+│   │
+│   ├── ec2/
+│   │   ├── main.tf         # EC2 resources
+│   │   ├── variables.tf
+│   │   ├── outputs.tf
+│   │   └── README.md
+│   │
+│   ├── s3/
+│   │   ├── main.tf         # S3 bucket
+│   │   ├── variables.tf
+│   │   ├── outputs.tf
+│   │   └── README.md
+│   │
+│   └── route53/
+│       ├── main.tf         # Route 53 hosted zone + records
+│       ├── variables.tf
+│       ├── outputs.tf
+│       └── README.md
+
+│── envs/                   # Environment-specific configs
+│   ├── dev/
+│   │   ├── main.tf         # Calls root module with dev vars
+│   │   ├── terraform.tfvars
+│   │   └── backend.tf      # Dev backend (separate state file)
+│   │
+│   ├── staging/
+│   │   ├── main.tf
+│   │   ├── terraform.tfvars
+│   │   └── backend.tf
+│   │
+│   └── prod/
+│       ├── main.tf
+│       ├── terraform.tfvars
+│       └── backend.tf
+
+│── scripts/                # Helper scripts
+│   ├── init.sh             # terraform init wrapper
+│   ├── plan.sh             # terraform plan wrapper
+│   └── apply.sh            # terraform apply wrapper
+
+│── .gitignore              # Ignore .terraform/, tfstate files, tfvars
+│── README.md               # Documentation
