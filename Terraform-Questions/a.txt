@@ -1,0 +1,35 @@
+Terraform interview questions
+
+  a. Basic Questions:
+    1. What is Terraform and how does it work?
+    2. Explain the core Terraform workflow (write, plan, apply).
+    3. What is Infrastructure as Code (IaC)?
+    4. What is a Terraform provider? Give an example.
+    5. What is a Terraform resource? Give an example.
+    6. What is the purpose of terraform init, terraform plan, and terraform apply?
+    7. What is Terraform state, and why is it important?
+    8. How do you manage sensitive data or secrets in Terraform?
+
+  b. Intermediate Questions:
+    1. What are Terraform modules, and how do they promote reusability?
+    2. Explain remote state management in Terraform. What are the benefits?
+    3. How do you use Terraform workspaces to manage multiple environments (dev, staging, prod)?
+    4. What are Terraform backends, and what are some common options?
+    5. Explain the difference between terraform apply and terraform refresh.
+    6. What is the null_resource in Terraform, and when would you use it?
+    7. How do you handle dependencies between resources in Terraform?
+    8. What is state locking in Terraform, and why is it necessary?
+    9. Differentiate between Terraform and other IaC tools like CloudFormation or Ansible. 
+
+  c. Advanced Questions:
+    1. How do you manage complex, multi-provider deployments with Terraform?
+    2. Describe how you would implement a blue-green deployment strategy using Terraform. 
+    3. How do you handle resource failures and rollbacks in Terraform? 
+    4. Explain the concept of "resource lifecycle" in Terraform.
+    5. How do you organize your Terraform codebase for better maintainability and scalability? 
+    6. What are dynamic blocks in Terraform, and when would you use them?
+    7. How can you write tests for Terraform configurations?
+    8. Discuss the use of terraform import, terraform taint, terraform state mv, and terraform state rm.
+    9. Explain the architecture of a Terraform request flow.
+    10. What is Terragrunt, and how does it complement Terraform?
+
