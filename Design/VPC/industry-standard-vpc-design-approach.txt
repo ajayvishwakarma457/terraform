@@ -118,3 +118,13 @@ Industry Standard:
   7. Cost Awareness →
       Enterprises control NAT Gateway costs with endpoints.
       Optimize subnet sizing to avoid wasted IPs.
+
+
+After these steps then you can 
+
+🔹 Next steps (what MNC teams usually do after VPC creation):
+  1. Add Security Groups → web, app, DB tiers.
+  2. Add VPC Endpoints → for S3/DynamoDB (to reduce NAT cost & improve security).
+  3. Deploy compute → EC2/ECS/EKS in private subnets, ALB in public subnets.
+  4. Set up Bastion Host or SSM Session Manager → for secure access.
+  5. Refactor into a module → so you can just call module "vpc" in future projects.
