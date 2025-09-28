@@ -1,0 +1,31 @@
+# Ignore Terraform local data and providers
+Working/**/.terraform/*
+Working/.terraform.lock.hcl
+
+# Ignore state files
+Working/*.tfstate
+Working/*.tfstate.*
+Working/terraform.tfstate
+Working/terraform.tfstate.backup
+
+# Ignore sensitive variables
+Working/*.tfvars
+Working/*.tfvars.json
+
+# Ignore crash logs
+Working/crash.log
+Working/crash.*.log
+
+# Ignore plan files
+Working/*.tfplan
+
+# Ignore credentials / env
+Working/.env
+*.pem
+
+# General OS / editor files
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
