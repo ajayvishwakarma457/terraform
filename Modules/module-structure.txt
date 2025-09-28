@@ -1,0 +1,187 @@
+# ==============================================================================
+# TERRAFORM MODULES DIRECTORY STRUCTURE - ENTERPRISE STANDARDS
+# ==============================================================================
+# Organization: MNC Enterprise
+# Purpose: Standardized module organization and best practices
+# ==============================================================================
+
+# Recommended directory structure for enterprise Terraform projects:
+
+terraform-infrastructure/
+├── environments/
+│   ├── dev/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   ├── outputs.tf
+│   │   ├── terraform.tfvars
+│   │   ├── versions.tf
+│   │   └── backend.tf
+│   ├── staging/
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   ├── outputs.tf
+│   │   ├── terraform.tfvars
+│   │   ├── versions.tf
+│   │   └── backend.tf
+│   └── prod/
+│       ├── main.tf
+│       ├── variables.tf
+│       ├── outputs.tf
+│       ├── terraform.tfvars
+│       ├── versions.tf
+│       └── backend.tf
+├── modules/
+│   ├── compute/
+│   │   ├── ec2/
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf
+│   │   │   ├── data.tf
+│   │   │   └── README.md
+│   │   ├── auto-scaling/
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf
+│   │   │   ├── user-data.sh
+│   │   │   └── README.md
+│   │   └── load-balancer/
+│   │       ├── main.tf
+│   │       ├── variables.tf
+│   │       ├── outputs.tf
+│   │       └── README.md
+│   ├── networking/
+│   │   ├── vpc/
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── README.md
+│   │   ├── security-groups/
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── README.md
+│   │   └── endpoints/
+│   │       ├── main.tf
+│   │       ├── variables.tf
+│   │       ├── outputs.tf
+│   │       └── README.md
+│   ├── database/
+│   │   ├── rds/
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── README.md
+│   │   ├── dynamodb/
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── README.md
+│   │   └── elasticache/
+│   │       ├── main.tf
+│   │       ├── variables.tf
+│   │       ├── outputs.tf
+│   │       └── README.md
+│   ├── security/
+│   │   ├── kms/
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── README.md
+│   │   ├── iam/
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf
+│   │   │   ├── policies/
+│   │   │   │   ├── assume-role-policy.json
+│   │   │   │   ├── ec2-policy.json
+│   │   │   │   └── s3-policy.json
+│   │   │   └── README.md
+│   │   └── waf/
+│   │       ├── main.tf
+│   │       ├── variables.tf
+│   │       ├── outputs.tf
+│   │       └── README.md
+│   ├── monitoring/
+│   │   ├── cloudwatch/
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── README.md
+│   │   ├── sns/
+│   │   │   ├── main.tf
+│   │   │   ├── variables.tf
+│   │   │   ├── outputs.tf
+│   │   │   └── README.md
+│   │   └── lambda/
+│   │       ├── main.tf
+│   │       ├── variables.tf
+│   │       ├── outputs.tf
+│   │       ├── function.zip
+│   │       └── README.md
+│   └── storage/
+│       ├── s3/
+│       │   ├── main.tf
+│       │   ├── variables.tf
+│       │   ├── outputs.tf
+│       │   └── README.md
+│       └── efs/
+│           ├── main.tf
+│           ├── variables.tf
+│           ├── outputs.tf
+│           └── README.md
+├── scripts/
+│   ├── terraform-init.sh
+│   ├── terraform-plan.sh
+│   ├── terraform-apply.sh
+│   ├── terraform-destroy.sh
+│   └── validate-terraform.sh
+├── docs/
+│   ├── CONTRIBUTING.md
+│   ├── STANDARDS.md
+│   ├── TROUBLESHOOTING.md
+│   └── architecture/
+│       ├── network-diagram.md
+│       └── security-architecture.md
+├── .github/
+│   └── workflows/
+│       ├── terraform-plan.yml
+│       ├── terraform-apply.yml
+│       └── terraform-validate.yml
+├── .gitignore
+├── .terraform-version
+├── README.md
+└── Makefile
+
+# ==============================================================================
+# MODULE BEST PRACTICES
+# ==============================================================================
+
+MODULE_STANDARDS:
+  - Each module should have a single responsibility
+  - All modules must include comprehensive documentation
+  - Use semantic versioning for module releases
+  - Include validation blocks for all input variables
+  - Provide meaningful outputs for downstream consumption
+  - Follow consistent naming conventions across all modules
+  - Include examples directory with usage samples
+
+NAMING_CONVENTIONS:
+  - Resources: kebab-case (e.g., web-app-server)
+  - Variables: snake_case (e.g., instance_type)
+  - Outputs: snake_case (e.g., vpc_id)
+  - Tags: PascalCase (e.g., ProjectName)
+
+SECURITY_REQUIREMENTS:
+  - All data at rest must be encrypted
+  - All data in transit must be encrypted
+  - Least privilege access principles
+  - No hardcoded secrets or credentials
+  - Use AWS Secrets Manager or Parameter Store
+  - Enable logging and monitoring for all resources
+
+COMPLIANCE_REQUIREMENTS:
+  - All resources must be tagged appropriately
+  - Cost center assignment mandatory
+  - Data classification must be specified
+  - Backup requirements must be defined
+  - Environment segregation enforced
