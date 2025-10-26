@@ -345,3 +345,101 @@ resource "aws_flow_log" "tanvora_vpc_flow" {
     }
   )
 }
+
+# 2️⃣4️⃣ S3 Bucket for VPC Flow Logs
+resource "aws_s3_bucket" "vpc_flow_logs_bucket" {
+  bucket = "${var.project_name}-vpc-flowlogs-${var.aws_region}"
+
+  tags = merge(
+    var.common_tags,
+    { Name = "${var.project_name}-vpc-flowlogs-bucket" }
+  )
+}
+
+# 2️⃣5️⃣ Enable Versioning (best practice for audit)
+resource "aws_s3_bucket_versioning" "vpc_flow_logs_versioning" {
+  bucket = aws_s3_bucket.vpc_flow_logs_bucket.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# 2️⃣6️⃣ Enable Server-Side Encryption (AES-256)
+resource "aws_s3_bucket_server_side_encryption_configuration" "vpc_flow_logs_sse" {
+  bucket = aws_s3_bucket.vpc_flow_logs_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# 2️⃣7️⃣ Lifecycle Policy (auto-archive to Glacier and delete after 365 days)
+resource "aws_s3_bucket_lifecycle_configuration" "vpc_flow_logs_lifecycle" {
+  bucket = aws_s3_bucket.vpc_flow_logs_bucket.id
+
+  rule {
+    id     = "archive-and-delete-old-logs"
+    status = "Enabled"
+
+    transition {
+      days          = 90
+      storage_class = "GLACIER"
+    }
+
+    expiration {
+      days = 365
+    }
+  }
+}
+
+# 2️⃣8️⃣ Allow VPC Flow Logs Service to Write to the Bucket
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket_policy" "vpc_flow_logs_policy" {
+  bucket = aws_s3_bucket.vpc_flow_logs_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "AWSLogDeliveryWrite",
+        Effect    = "Allow",
+        Principal = { Service = "delivery.logs.amazonaws.com" },
+        Action    = ["s3:PutObject"],
+        Resource  = "${aws_s3_bucket.vpc_flow_logs_bucket.arn}/*",
+        Condition = {
+          StringEquals = {
+            "aws:SourceAccount" = data.aws_caller_identity.current.account_id
+          }
+        }
+      },
+      {
+        Sid       = "AWSLogDeliveryAclCheck",
+        Effect    = "Allow",
+        Principal = { Service = "delivery.logs.amazonaws.com" },
+        Action    = ["s3:GetBucketAcl"],
+        Resource  = aws_s3_bucket.vpc_flow_logs_bucket.arn
+      }
+    ]
+  })
+}
+
+# 2️⃣9️⃣ Create a Separate Flow Log → S3 Destination
+resource "aws_flow_log" "tanvora_vpc_flow_s3" {
+  vpc_id               = aws_vpc.tanvora_vpc.id
+  traffic_type         = "ALL"
+  log_destination_type = "s3"
+  log_destination      = aws_s3_bucket.vpc_flow_logs_bucket.arn
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-vpc-flowlogs-s3"
+      Type = "Monitoring"
+    }
+  )
+}
+

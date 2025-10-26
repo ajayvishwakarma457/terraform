@@ -93,3 +93,8 @@ output "vpc_flow_log_group" {
   description = "CloudWatch Log Group for Flow Logs"
   value       = aws_cloudwatch_log_group.vpc_flow.name
 }
+
+output "vpc_flow_logs_bucket_name" {
+  description = "S3 bucket name for VPC Flow Logs"
+  value       = aws_s3_bucket.vpc_flow_logs_bucket.bucket
+}
