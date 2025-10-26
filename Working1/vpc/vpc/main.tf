@@ -1073,8 +1073,6 @@ resource "aws_security_group" "ec2_private_sg" {
   )
 }
 
-
-
 # 6️⃣8️⃣ EC2 Instance in Private Subnet
 resource "aws_instance" "private_ec2" {
   ami                         = "ami-00af95fa354fdb788" # Amazon Linux 2 (Mumbai)
@@ -1089,3 +1087,5 @@ resource "aws_instance" "private_ec2" {
     { Name = "${var.project_name}-private-ec2" }
   )
 }
+
+
