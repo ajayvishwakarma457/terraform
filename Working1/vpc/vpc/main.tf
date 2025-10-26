@@ -51,3 +51,15 @@ resource "aws_subnet" "private_subnet" {
     { Name = "${var.project_name}-private-subnet" }
   )
 }
+
+# 4️⃣ Internet Gateway
+resource "aws_internet_gateway" "tanvora_igw" {
+  vpc_id = aws_vpc.tanvora_vpc.id
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-igw"
+    }
+  )
+}

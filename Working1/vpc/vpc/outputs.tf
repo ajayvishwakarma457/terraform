@@ -27,3 +27,8 @@ output "private_subnet_cidr" {
   description = "CIDR block of private subnet"
   value       = aws_subnet.private_subnet.cidr_block
 }
+
+output "internet_gateway_id" {
+  description = "ID of the Internet Gateway"
+  value       = aws_internet_gateway.tanvora_igw.id
+}

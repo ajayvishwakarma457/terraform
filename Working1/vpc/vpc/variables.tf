@@ -58,3 +58,5 @@ variable "private_az" {
   type        = string
   default     = "ap-south-1b"
 }
+
+
