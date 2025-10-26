@@ -98,3 +98,4 @@ output "vpc_flow_logs_bucket_name" {
   description = "S3 bucket name for VPC Flow Logs"
   value       = aws_s3_bucket.vpc_flow_logs_bucket.bucket
 }
+
