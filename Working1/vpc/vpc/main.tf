@@ -64,7 +64,6 @@ resource "aws_internet_gateway" "tanvora_igw" {
   )
 }
 
-
 # 5️⃣ Public Route Table
 resource "aws_route_table" "public_rt" {
   vpc_id = aws_vpc.tanvora_vpc.id
@@ -91,10 +90,9 @@ resource "aws_route_table_association" "public_assoc" {
   route_table_id = aws_route_table.public_rt.id
 }
 
-
 # 8️⃣ Elastic IP for NAT Gateway
 resource "aws_eip" "tanvora_nat_eip" {
-  domain = "vpc"   # ✅ new way to specify it’s for a VPC (optional but explicit)
+  domain = "vpc"
 
   tags = merge(
     var.common_tags,
@@ -104,7 +102,6 @@ resource "aws_eip" "tanvora_nat_eip" {
     }
   )
 }
-
 
 # 9️⃣ NAT Gateway (in Public Subnet)
 resource "aws_nat_gateway" "tanvora_nat" {
@@ -150,13 +147,11 @@ resource "aws_route_table_association" "private_assoc" {
 
 # 1️⃣3️⃣ S3 Gateway Endpoint
 resource "aws_vpc_endpoint" "s3_gateway" {
-  vpc_id       = aws_vpc.tanvora_vpc.id
-  service_name = "com.amazonaws.${var.aws_region}.s3"
+  vpc_id            = aws_vpc.tanvora_vpc.id
+  service_name      = "com.amazonaws.${var.aws_region}.s3"
   vpc_endpoint_type = "Gateway"
 
-  route_table_ids = [
-    aws_route_table.private_rt.id
-  ]
+  route_table_ids = [aws_route_table.private_rt.id]
 
   tags = merge(
     var.common_tags,
@@ -169,13 +164,11 @@ resource "aws_vpc_endpoint" "s3_gateway" {
 
 # 1️⃣4️⃣ DynamoDB Gateway Endpoint
 resource "aws_vpc_endpoint" "dynamodb_gateway" {
-  vpc_id       = aws_vpc.tanvora_vpc.id
-  service_name = "com.amazonaws.${var.aws_region}.dynamodb"
+  vpc_id            = aws_vpc.tanvora_vpc.id
+  service_name      = "com.amazonaws.${var.aws_region}.dynamodb"
   vpc_endpoint_type = "Gateway"
 
-  route_table_ids = [
-    aws_route_table.private_rt.id
-  ]
+  route_table_ids = [aws_route_table.private_rt.id]
 
   tags = merge(
     var.common_tags,
@@ -186,14 +179,41 @@ resource "aws_vpc_endpoint" "dynamodb_gateway" {
   )
 }
 
+# 🧱 1️⃣5️⃣ Security Group for Interface Endpoints (NEW)
+resource "aws_security_group" "vpc_endpoints_sg" {
+  name        = "${var.project_name}-vpc-endpoints-sg"
+  description = "Allow HTTPS (443) within the VPC for Interface Endpoints"
+  vpc_id      = aws_vpc.tanvora_vpc.id
 
-# 1️⃣5️⃣ Interface Endpoint for Systems Manager (SSM)
+  ingress {
+    description = "Allow HTTPS from VPC CIDR"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [aws_vpc.tanvora_vpc.cidr_block]
+  }
+
+  egress {
+    description = "Allow all outbound"
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = merge(
+    var.common_tags,
+    { Name = "${var.project_name}-vpc-endpoints-sg" }
+  )
+}
+
+# 1️⃣6️⃣ Interface Endpoint for Systems Manager (SSM)
 resource "aws_vpc_endpoint" "ssm_endpoint" {
   vpc_id             = aws_vpc.tanvora_vpc.id
   service_name       = "com.amazonaws.${var.aws_region}.ssm"
   vpc_endpoint_type  = "Interface"
   subnet_ids         = [aws_subnet.private_subnet.id]
-  security_group_ids = [] # you can attach a custom SG later if needed
+  security_group_ids = [aws_security_group.vpc_endpoints_sg.id]
 
   private_dns_enabled = true
 
@@ -206,13 +226,13 @@ resource "aws_vpc_endpoint" "ssm_endpoint" {
   )
 }
 
-# 1️⃣6️⃣ Interface Endpoint for EC2 Messages (required by SSM)
+# 1️⃣7️⃣ Interface Endpoint for EC2 Messages
 resource "aws_vpc_endpoint" "ec2_messages_endpoint" {
   vpc_id             = aws_vpc.tanvora_vpc.id
   service_name       = "com.amazonaws.${var.aws_region}.ec2messages"
   vpc_endpoint_type  = "Interface"
   subnet_ids         = [aws_subnet.private_subnet.id]
-  security_group_ids = []
+  security_group_ids = [aws_security_group.vpc_endpoints_sg.id]
 
   private_dns_enabled = true
 
@@ -225,13 +245,13 @@ resource "aws_vpc_endpoint" "ec2_messages_endpoint" {
   )
 }
 
-# 1️⃣7️⃣ Interface Endpoint for SSM Messages (used for Session Manager)
+# 1️⃣8️⃣ Interface Endpoint for SSM Messages
 resource "aws_vpc_endpoint" "ssmmessages_endpoint" {
   vpc_id             = aws_vpc.tanvora_vpc.id
   service_name       = "com.amazonaws.${var.aws_region}.ssmmessages"
   vpc_endpoint_type  = "Interface"
   subnet_ids         = [aws_subnet.private_subnet.id]
-  security_group_ids = []
+  security_group_ids = [aws_security_group.vpc_endpoints_sg.id]
 
   private_dns_enabled = true
 
@@ -244,13 +264,13 @@ resource "aws_vpc_endpoint" "ssmmessages_endpoint" {
   )
 }
 
-# 1️⃣8️⃣ Interface Endpoint for CloudWatch Logs (optional but recommended)
+# 1️⃣9️⃣ Interface Endpoint for CloudWatch Logs
 resource "aws_vpc_endpoint" "cloudwatch_endpoint" {
   vpc_id             = aws_vpc.tanvora_vpc.id
   service_name       = "com.amazonaws.${var.aws_region}.logs"
   vpc_endpoint_type  = "Interface"
   subnet_ids         = [aws_subnet.private_subnet.id]
-  security_group_ids = []
+  security_group_ids = [aws_security_group.vpc_endpoints_sg.id]
 
   private_dns_enabled = true
 
