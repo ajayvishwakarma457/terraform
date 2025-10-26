@@ -29,3 +29,6 @@ Working/.env
 .idea/
 *.swp
 *.swo
+
+Working1/**/.terraform/
+Working1/**/.terraform.lock.hcl
