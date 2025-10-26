@@ -186,3 +186,79 @@ resource "aws_vpc_endpoint" "dynamodb_gateway" {
   )
 }
 
+
+# 1️⃣5️⃣ Interface Endpoint for Systems Manager (SSM)
+resource "aws_vpc_endpoint" "ssm_endpoint" {
+  vpc_id             = aws_vpc.tanvora_vpc.id
+  service_name       = "com.amazonaws.${var.aws_region}.ssm"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = [aws_subnet.private_subnet.id]
+  security_group_ids = [] # you can attach a custom SG later if needed
+
+  private_dns_enabled = true
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-ssm-endpoint"
+      Type = "Interface"
+    }
+  )
+}
+
+# 1️⃣6️⃣ Interface Endpoint for EC2 Messages (required by SSM)
+resource "aws_vpc_endpoint" "ec2_messages_endpoint" {
+  vpc_id             = aws_vpc.tanvora_vpc.id
+  service_name       = "com.amazonaws.${var.aws_region}.ec2messages"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = [aws_subnet.private_subnet.id]
+  security_group_ids = []
+
+  private_dns_enabled = true
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-ec2messages-endpoint"
+      Type = "Interface"
+    }
+  )
+}
+
+# 1️⃣7️⃣ Interface Endpoint for SSM Messages (used for Session Manager)
+resource "aws_vpc_endpoint" "ssmmessages_endpoint" {
+  vpc_id             = aws_vpc.tanvora_vpc.id
+  service_name       = "com.amazonaws.${var.aws_region}.ssmmessages"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = [aws_subnet.private_subnet.id]
+  security_group_ids = []
+
+  private_dns_enabled = true
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-ssmmessages-endpoint"
+      Type = "Interface"
+    }
+  )
+}
+
+# 1️⃣8️⃣ Interface Endpoint for CloudWatch Logs (optional but recommended)
+resource "aws_vpc_endpoint" "cloudwatch_endpoint" {
+  vpc_id             = aws_vpc.tanvora_vpc.id
+  service_name       = "com.amazonaws.${var.aws_region}.logs"
+  vpc_endpoint_type  = "Interface"
+  subnet_ids         = [aws_subnet.private_subnet.id]
+  security_group_ids = []
+
+  private_dns_enabled = true
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-cloudwatch-endpoint"
+      Type = "Interface"
+    }
+  )
+}
