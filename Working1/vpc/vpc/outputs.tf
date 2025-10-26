@@ -83,3 +83,13 @@ output "cloudwatch_endpoint_id" {
   description = "ID of the CloudWatch Logs Interface Endpoint"
   value       = aws_vpc_endpoint.cloudwatch_endpoint.id
 }
+
+output "vpc_flow_log_id" {
+  description = "ID of the VPC Flow Log"
+  value       = aws_flow_log.tanvora_vpc_flow.id
+}
+
+output "vpc_flow_log_group" {
+  description = "CloudWatch Log Group for Flow Logs"
+  value       = aws_cloudwatch_log_group.vpc_flow.name
+}
