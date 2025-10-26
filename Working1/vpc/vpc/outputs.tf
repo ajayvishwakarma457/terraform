@@ -158,3 +158,13 @@ output "lambda_role_name" {
   description = "IAM Role name for Lambda"
   value       = aws_iam_role.lambda_role.name
 }
+
+output "private_ec2_id" {
+  description = "Private EC2 Instance ID"
+  value       = aws_instance.private_ec2.id
+}
+
+output "private_ec2_private_ip" {
+  description = "Private IP of EC2"
+  value       = aws_instance.private_ec2.private_ip
+}

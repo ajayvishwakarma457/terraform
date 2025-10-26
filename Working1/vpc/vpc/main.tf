@@ -1049,3 +1049,43 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_attach" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
+
+
+# 6️⃣7️⃣ Security Group for Private EC2
+resource "aws_security_group" "ec2_private_sg" {
+  name        = "${var.project_name}-ec2-private-sg"
+  description = "Allow outbound only (for private EC2)"
+  vpc_id      = aws_vpc.tanvora_vpc.id
+
+  # Allow all outbound (for updates / NAT)
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # No ingress block = no inbound access allowed
+
+  tags = merge(
+    var.common_tags,
+    { Name = "${var.project_name}-ec2-private-sg" }
+  )
+}
+
+
+
+# 6️⃣8️⃣ EC2 Instance in Private Subnet
+resource "aws_instance" "private_ec2" {
+  ami                         = "ami-00af95fa354fdb788" # Amazon Linux 2 (Mumbai)
+  instance_type               = "t3.micro"
+  subnet_id                   = aws_subnet.private_subnet.id
+  vpc_security_group_ids      = [aws_security_group.ec2_private_sg.id]
+  iam_instance_profile        = aws_iam_instance_profile.ec2_instance_profile.name
+  associate_public_ip_address = false
+
+  tags = merge(
+    var.common_tags,
+    { Name = "${var.project_name}-private-ec2" }
+  )
+}
