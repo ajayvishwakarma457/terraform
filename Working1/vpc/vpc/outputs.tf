@@ -99,3 +99,12 @@ output "vpc_flow_logs_bucket_name" {
   value       = aws_s3_bucket.vpc_flow_logs_bucket.bucket
 }
 
+output "cloudtrail_bucket_name" {
+  description = "S3 bucket name where CloudTrail stores logs"
+  value       = aws_s3_bucket.cloudtrail_bucket.bucket
+}
+
+output "cloudtrail_trail_name" {
+  description = "Name of the CloudTrail trail"
+  value       = aws_cloudtrail.tanvora_trail.name
+}

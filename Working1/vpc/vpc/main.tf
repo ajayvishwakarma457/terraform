@@ -444,4 +444,128 @@ resource "aws_flow_log" "tanvora_vpc_flow_s3" {
 }
 
 
+# 3️⃣0️⃣ S3 Bucket for CloudTrail Logs
+resource "aws_s3_bucket" "cloudtrail_bucket" {
+  bucket = "${var.project_name}-cloudtrail-${var.aws_region}"
+
+  tags = merge(
+    var.common_tags,
+    { Name = "${var.project_name}-cloudtrail-bucket" }
+  )
+}
+
+# 3️⃣1️⃣ Enable Versioning (recommended for audit)
+resource "aws_s3_bucket_versioning" "cloudtrail_versioning" {
+  bucket = aws_s3_bucket.cloudtrail_bucket.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# 3️⃣2️⃣ Encrypt CloudTrail Logs (AES-256)
+resource "aws_s3_bucket_server_side_encryption_configuration" "cloudtrail_sse" {
+  bucket = aws_s3_bucket.cloudtrail_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# 3️⃣3️⃣ Allow CloudTrail service to write logs to the bucket
+# data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket_policy" "cloudtrail_policy" {
+  bucket = aws_s3_bucket.cloudtrail_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "AWSCloudTrailAclCheck",
+        Effect    = "Allow",
+        Principal = { Service = "cloudtrail.amazonaws.com" },
+        Action    = "s3:GetBucketAcl",
+        Resource  = aws_s3_bucket.cloudtrail_bucket.arn
+      },
+      {
+        Sid       = "AWSCloudTrailWrite",
+        Effect    = "Allow",
+        Principal = { Service = "cloudtrail.amazonaws.com" },
+        Action    = "s3:PutObject",
+        Resource  = "${aws_s3_bucket.cloudtrail_bucket.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
+      }
+    ]
+  })
+}
+
+# 3️⃣4️⃣ CloudWatch Log Group (for real-time CloudTrail monitoring)
+resource "aws_cloudwatch_log_group" "cloudtrail" {
+  name              = "/aws/cloudtrail/${var.project_name}"
+  retention_in_days = 30
+  tags              = var.common_tags
+}
+
+# 3️⃣5️⃣ IAM Role for CloudTrail → CloudWatch
+resource "aws_iam_role" "cloudtrail" {
+  name = "${var.project_name}-cloudtrail-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect    = "Allow",
+        Principal = { Service = "cloudtrail.amazonaws.com" },
+        Action    = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = var.common_tags
+}
+
+resource "aws_iam_role_policy" "cloudtrail" {
+  name = "${var.project_name}-cloudtrail-policy"
+  role = aws_iam_role.cloudtrail.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# 3️⃣6️⃣ Create the CloudTrail
+resource "aws_cloudtrail" "tanvora_trail" {
+  name                          = "${var.project_name}-trail"
+  s3_bucket_name                = aws_s3_bucket.cloudtrail_bucket.id
+  include_global_service_events = true
+  is_multi_region_trail         = true
+  enable_log_file_validation    = true
+
+  # ✅ Fix: Provide full ARN manually using region + account_id
+  cloud_watch_logs_group_arn = "arn:aws:logs:${var.aws_region}:${data.aws_caller_identity.current.account_id}:log-group:${aws_cloudwatch_log_group.cloudtrail.name}:*"
+  cloud_watch_logs_role_arn  = aws_iam_role.cloudtrail.arn
+
+  tags = merge(
+    var.common_tags,
+    { Name = "${var.project_name}-cloudtrail" }
+  )
+}
+
 
