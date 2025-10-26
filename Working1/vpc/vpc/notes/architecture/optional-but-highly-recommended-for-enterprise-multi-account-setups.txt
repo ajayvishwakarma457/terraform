@@ -1,0 +1,12 @@
+🧠 Optional (but Highly Recommended for Enterprise / Multi-Account setups)
+If you want to go from “production-ready” → “enterprise-standard”, here are the enhancements you can add later (not mandatory right now):
+
+| Enhancement                               | Why It’s Used                                                | Notes                                                                  |
+| ----------------------------------------- | ------------------------------------------------------------ | ---------------------------------------------------------------------- |
+| **Multi-AZ Subnets**                      | High availability — at least 2 public + 2 private subnets    | You can easily extend your Terraform with `count = 2` and AZ iteration |
+| **VPC Flow Logs**                         | Monitor traffic in/out of VPC for auditing & troubleshooting | Store logs in CloudWatch or S3                                         |
+| **Private DNS Zone (Route 53)**           | Internal service discovery within the VPC                    | Used for microservices or private APIs                                 |
+| **SSM Parameter Store / Secrets Manager** | Centralized secrets config for private EC2/Lambda            | No need to hardcode credentials                                        |
+| **Transit Gateway or VPC Peering**        | For connecting multiple VPCs across accounts/regions         | Optional when you scale                                                |
+| **Network ACLs (NACLs)**                  | Additional subnet-level security                             | Often kept default if Security Groups are strong                       |
+| **VPC Endpoints for more services**       | Add endpoints for `ecr.api`, `ecr.dkr`, `kms`, etc. if used  | Only needed when deploying specific workloads                          |
