@@ -128,3 +128,8 @@ output "config_rules" {
     aws_config_config_rule.root_mfa.name
   ]
 }
+
+output "config_alerts_sns_topic" {
+  description = "SNS topic ARN for compliance alerts"
+  value       = aws_sns_topic.config_alerts_topic.arn
+}

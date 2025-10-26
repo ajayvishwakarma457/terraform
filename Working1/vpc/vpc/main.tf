@@ -761,3 +761,85 @@ resource "aws_config_config_rule" "root_mfa" {
   tags = merge(var.common_tags, { Name = "Root MFA Enabled" })
 }
 
+# 4️⃣7️⃣ SNS Topic for Compliance Alerts
+resource "aws_sns_topic" "config_alerts_topic" {
+  name = "${var.project_name}-config-alerts"
+
+  tags = merge(var.common_tags, {
+    Name = "${var.project_name}-config-alerts"
+  })
+}
+
+# 4️⃣8️⃣ SNS Email Subscription
+resource "aws_sns_topic_subscription" "config_alerts_email" {
+  topic_arn = aws_sns_topic.config_alerts_topic.arn
+  protocol  = "email"
+  endpoint  = var.alert_email   # 👈 We'll define this in variables.tf
+}
+
+# 4️⃣9️⃣ EventBridge Rule for Config Noncompliance
+resource "aws_cloudwatch_event_rule" "config_noncompliant_rule" {
+  name        = "${var.project_name}-config-noncompliance"
+  description = "Triggers when AWS Config marks a resource NON_COMPLIANT"
+  event_pattern = jsonencode({
+    "source"      : ["aws.config"],
+    "detail-type" : ["Config Rules Compliance Change"],
+    "detail" : {
+      "newEvaluationResult" : {
+        "complianceType" : ["NON_COMPLIANT"]
+      }
+    }
+  })
+
+  tags = var.common_tags
+}
+
+# 5️⃣0️⃣ EventBridge Target → SNS
+resource "aws_cloudwatch_event_target" "config_to_sns" {
+  rule      = aws_cloudwatch_event_rule.config_noncompliant_rule.name
+  target_id = "SendToSNS"
+  arn       = aws_sns_topic.config_alerts_topic.arn
+}
+
+# 5️⃣1️⃣ IAM Role for EventBridge to Publish to SNS
+resource "aws_iam_role" "eventbridge_sns_role" {
+  name = "${var.project_name}-eventbridge-sns-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect    = "Allow",
+        Principal = { Service = "events.amazonaws.com" },
+        Action    = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = var.common_tags
+}
+
+resource "aws_iam_role_policy" "eventbridge_sns_policy" {
+  name = "${var.project_name}-eventbridge-sns-policy"
+  role = aws_iam_role.eventbridge_sns_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = "sns:Publish",
+        Resource = aws_sns_topic.config_alerts_topic.arn
+      }
+    ]
+  })
+}
+
+# 5️⃣2️⃣ Attach Role to EventBridge Target
+resource "aws_cloudwatch_event_target" "config_to_sns_with_role" {
+  rule      = aws_cloudwatch_event_rule.config_noncompliant_rule.name
+  target_id = "SendToSNS"
+  arn       = aws_sns_topic.config_alerts_topic.arn
+  role_arn  = aws_iam_role.eventbridge_sns_role.arn
+}
+

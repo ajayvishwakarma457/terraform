@@ -59,4 +59,9 @@ variable "private_az" {
   default     = "ap-south-1b"
 }
 
+variable "alert_email" {
+  description = "Email address for AWS Config compliance alerts"
+  type        = string
+  default     = "your.email@example.com"  # 👈 Replace with your email
+}
 
