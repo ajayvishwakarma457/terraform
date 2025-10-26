@@ -52,3 +52,14 @@ output "private_route_table_id" {
   description = "Route Table ID for Private Subnet"
   value       = aws_route_table.private_rt.id
 }
+
+output "s3_gateway_endpoint_id" {
+  description = "ID of the S3 VPC Gateway Endpoint"
+  value       = aws_vpc_endpoint.s3_gateway.id
+}
+
+output "dynamodb_gateway_endpoint_id" {
+  description = "ID of the DynamoDB VPC Gateway Endpoint"
+  value       = aws_vpc_endpoint.dynamodb_gateway.id
+}
+

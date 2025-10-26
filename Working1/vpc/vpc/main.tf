@@ -147,3 +147,41 @@ resource "aws_route_table_association" "private_assoc" {
   subnet_id      = aws_subnet.private_subnet.id
   route_table_id = aws_route_table.private_rt.id
 }
+
+# 1️⃣3️⃣ S3 Gateway Endpoint
+resource "aws_vpc_endpoint" "s3_gateway" {
+  vpc_id       = aws_vpc.tanvora_vpc.id
+  service_name = "com.amazonaws.${var.aws_region}.s3"
+  vpc_endpoint_type = "Gateway"
+
+  route_table_ids = [
+    aws_route_table.private_rt.id
+  ]
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-s3-endpoint"
+      Type = "Gateway"
+    }
+  )
+}
+
+# 1️⃣4️⃣ DynamoDB Gateway Endpoint
+resource "aws_vpc_endpoint" "dynamodb_gateway" {
+  vpc_id       = aws_vpc.tanvora_vpc.id
+  service_name = "com.amazonaws.${var.aws_region}.dynamodb"
+  vpc_endpoint_type = "Gateway"
+
+  route_table_ids = [
+    aws_route_table.private_rt.id
+  ]
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-dynamodb-endpoint"
+      Type = "Gateway"
+    }
+  )
+}
