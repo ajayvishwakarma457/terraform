@@ -910,3 +910,53 @@ resource "aws_iam_user_group_membership" "audit_to_auditors" {
   user   = aws_iam_user.audit_user.name
   groups = [aws_iam_group.auditors.name]
 }
+
+# 5️⃣8️⃣ Strong IAM Password Policy
+resource "aws_iam_account_password_policy" "secure_policy" {
+  minimum_password_length        = 12
+  require_lowercase_characters   = true
+  require_uppercase_characters   = true
+  require_numbers                = true
+  require_symbols                = true
+  allow_users_to_change_password = true
+  max_password_age               = 90          # days
+  password_reuse_prevention      = 5           # disallow reuse of last 5 passwords
+  hard_expiry                    = false
+}
+
+
+# 5️⃣9️⃣ IAM Policy to Require MFA
+resource "aws_iam_policy" "require_mfa" {
+  name        = "require-mfa"
+  description = "Deny all actions except when MFA is enabled"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "BlockMostActionsUnlessMFA",
+        Effect    = "Deny",
+        Action    = "*",
+        Resource  = "*",
+        Condition = {
+          BoolIfExists = { "aws:MultiFactorAuthPresent" = "false" }
+        }
+      }
+    ]
+  })
+}
+
+# Attach MFA Policy to All IAM Users
+resource "aws_iam_user_policy_attachment" "ajay_mfa" {
+  user       = aws_iam_user.ajay_admin.name
+  policy_arn = aws_iam_policy.require_mfa.arn
+}
+
+resource "aws_iam_user_policy_attachment" "raunak_mfa" {
+  user       = aws_iam_user.raunak_dev.name
+  policy_arn = aws_iam_policy.require_mfa.arn
+}
+
+resource "aws_iam_user_policy_attachment" "audit_mfa" {
+  user       = aws_iam_user.audit_user.name
+  policy_arn = aws_iam_policy.require_mfa.arn
+}
