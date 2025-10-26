@@ -148,3 +148,13 @@ output "iam_auditor_user" {
   description = "Auditor IAM user name"
   value       = aws_iam_user.audit_user.name
 }
+
+output "ec2_instance_profile" {
+  description = "IAM Instance Profile for EC2"
+  value       = aws_iam_instance_profile.ec2_instance_profile.name
+}
+
+output "lambda_role_name" {
+  description = "IAM Role name for Lambda"
+  value       = aws_iam_role.lambda_role.name
+}
