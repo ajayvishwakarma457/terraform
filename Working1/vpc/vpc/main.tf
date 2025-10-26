@@ -1,21 +1,52 @@
-provider "aws" {
-  region = "ap-south-1" # Mumbai region (change if needed)
-}
+terraform {
+  required_version = ">= 1.5.0"
 
-# Step 1️⃣ – Create the VPC
-resource "aws_vpc" "tanvora_vpc" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-
-  tags = {
-    Name        = "tanvora-vpc"
-    Project     = "Tanvora"
-    Environment = "Dev"
-    CreatedBy   = "Terraform"
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
   }
 }
 
-output "vpc_id" {
-  value = aws_vpc.tanvora_vpc.id
+provider "aws" {
+  region = var.aws_region
+}
+
+resource "aws_vpc" "tanvora_vpc" {
+  cidr_block           = var.vpc_cidr
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-vpc"
+    }
+  )
+}
+
+# 2️⃣ Public Subnet
+resource "aws_subnet" "public_subnet" {
+  vpc_id                  = aws_vpc.tanvora_vpc.id
+  cidr_block              = var.public_subnet_cidr
+  availability_zone       = var.public_az
+  map_public_ip_on_launch = true  # Required for public subnet
+
+  tags = merge(
+    var.common_tags,
+    { Name = "${var.project_name}-public-subnet" }
+  )
+}
+
+# 3️⃣ Private Subnet
+resource "aws_subnet" "private_subnet" {
+  vpc_id            = aws_vpc.tanvora_vpc.id
+  cidr_block        = var.private_subnet_cidr
+  availability_zone = var.private_az
+
+  tags = merge(
+    var.common_tags,
+    { Name = "${var.project_name}-private-subnet" }
+  )
 }
