@@ -32,3 +32,8 @@ output "internet_gateway_id" {
   description = "ID of the Internet Gateway"
   value       = aws_internet_gateway.tanvora_igw.id
 }
+
+output "public_route_table_id" {
+  description = "Route Table ID for the Public Subnet"
+  value       = aws_route_table.public_rt.id
+}

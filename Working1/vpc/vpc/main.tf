@@ -63,3 +63,30 @@ resource "aws_internet_gateway" "tanvora_igw" {
     }
   )
 }
+
+
+# 5️⃣ Public Route Table
+resource "aws_route_table" "public_rt" {
+  vpc_id = aws_vpc.tanvora_vpc.id
+
+  tags = merge(
+    var.common_tags,
+    {
+      Name = "${var.project_name}-public-rt"
+      Type = "Public"
+    }
+  )
+}
+
+# 6️⃣ Route to Internet Gateway
+resource "aws_route" "public_internet_route" {
+  route_table_id         = aws_route_table.public_rt.id
+  destination_cidr_block = "0.0.0.0/0"
+  gateway_id             = aws_internet_gateway.tanvora_igw.id
+}
+
+# 7️⃣ Associate Route Table with Public Subnet
+resource "aws_route_table_association" "public_assoc" {
+  subnet_id      = aws_subnet.public_subnet.id
+  route_table_id = aws_route_table.public_rt.id
+}
