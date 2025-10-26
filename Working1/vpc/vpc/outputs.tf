@@ -118,3 +118,13 @@ output "config_recorder_name" {
   description = "AWS Config recorder name"
   value       = aws_config_configuration_recorder.tanvora_config.name
 }
+
+output "config_rules" {
+  description = "AWS Config managed rules for compliance"
+  value = [
+    aws_config_config_rule.s3_public_read.name,
+    aws_config_config_rule.ec2_no_public_ip.name,
+    aws_config_config_rule.ebs_encrypted.name,
+    aws_config_config_rule.root_mfa.name
+  ]
+}

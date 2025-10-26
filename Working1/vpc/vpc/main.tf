@@ -702,3 +702,62 @@ resource "aws_config_configuration_recorder_status" "tanvora_config_status" {
 
   depends_on = [aws_config_delivery_channel.tanvora_channel]
 }
+
+# 4️⃣6️⃣ AWS Config Managed Rules
+# ----------------------------------------------------
+# 1️⃣ Ensure S3 Buckets are not publicly readable
+resource "aws_config_config_rule" "s3_public_read" {
+  name = "s3-bucket-public-read-prohibited"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "S3_BUCKET_PUBLIC_READ_PROHIBITED"
+  }
+
+  depends_on = [aws_config_configuration_recorder_status.tanvora_config_status]
+
+  tags = merge(var.common_tags, { Name = "S3 Public Read Prohibited" })
+}
+
+# 2️⃣ Ensure EC2 Instances don't have Public IPs
+resource "aws_config_config_rule" "ec2_no_public_ip" {
+  name = "ec2-instance-no-public-ip"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "EC2_INSTANCE_NO_PUBLIC_IP"
+  }
+
+  depends_on = [aws_config_configuration_recorder_status.tanvora_config_status]
+
+  tags = merge(var.common_tags, { Name = "EC2 No Public IP" })
+}
+
+# 3️⃣ Ensure EBS volumes are encrypted
+resource "aws_config_config_rule" "ebs_encrypted" {
+  name = "encrypted-volumes"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "ENCRYPTED_VOLUMES"
+  }
+
+  depends_on = [aws_config_configuration_recorder_status.tanvora_config_status]
+
+  tags = merge(var.common_tags, { Name = "EBS Encrypted Volumes" })
+}
+
+# 4️⃣ Ensure IAM root account has MFA enabled
+resource "aws_config_config_rule" "root_mfa" {
+  name = "root-account-mfa-enabled"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "ROOT_ACCOUNT_MFA_ENABLED"
+  }
+
+  depends_on = [aws_config_configuration_recorder_status.tanvora_config_status]
+
+  tags = merge(var.common_tags, { Name = "Root MFA Enabled" })
+}
+
