@@ -37,3 +37,18 @@ output "public_route_table_id" {
   description = "Route Table ID for the Public Subnet"
   value       = aws_route_table.public_rt.id
 }
+
+output "nat_gateway_id" {
+  description = "ID of the NAT Gateway"
+  value       = aws_nat_gateway.tanvora_nat.id
+}
+
+output "nat_eip" {
+  description = "Elastic IP for NAT Gateway"
+  value       = aws_eip.tanvora_nat_eip.public_ip
+}
+
+output "private_route_table_id" {
+  description = "Route Table ID for Private Subnet"
+  value       = aws_route_table.private_rt.id
+}
