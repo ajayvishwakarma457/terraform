@@ -569,3 +569,136 @@ resource "aws_cloudtrail" "tanvora_trail" {
 }
 
 
+
+# 3️⃣7️⃣ S3 Bucket for AWS Config
+resource "aws_s3_bucket" "config_bucket" {
+  bucket = "${var.project_name}-config-${var.aws_region}"
+
+  tags = merge(
+    var.common_tags,
+    { Name = "${var.project_name}-config-bucket" }
+  )
+}
+
+# 3️⃣8️⃣ Enable Versioning (to keep config history)
+resource "aws_s3_bucket_versioning" "config_versioning" {
+  bucket = aws_s3_bucket.config_bucket.id
+
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# 3️⃣9️⃣ Enable Encryption
+resource "aws_s3_bucket_server_side_encryption_configuration" "config_sse" {
+  bucket = aws_s3_bucket.config_bucket.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# 4️⃣0️⃣ Allow AWS Config to Write to the S3 Bucket
+# data "aws_caller_identity" "current" {}
+
+resource "aws_s3_bucket_policy" "config_policy" {
+  bucket = aws_s3_bucket.config_bucket.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Sid       = "AWSConfigBucketPermissionsCheck",
+        Effect    = "Allow",
+        Principal = { Service = "config.amazonaws.com" },
+        Action    = "s3:GetBucketAcl",
+        Resource  = aws_s3_bucket.config_bucket.arn
+      },
+      {
+        Sid       = "AWSConfigBucketDelivery",
+        Effect    = "Allow",
+        Principal = { Service = "config.amazonaws.com" },
+        Action    = "s3:PutObject",
+        Resource  = "${aws_s3_bucket.config_bucket.arn}/AWSLogs/${data.aws_caller_identity.current.account_id}/*",
+        Condition = {
+          StringEquals = {
+            "s3:x-amz-acl" = "bucket-owner-full-control"
+          }
+        }
+      }
+    ]
+  })
+}
+
+# 4️⃣1️⃣ IAM Role for AWS Config
+resource "aws_iam_role" "config_role" {
+  name = "${var.project_name}-config-role"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect    = "Allow",
+        Principal = { Service = "config.amazonaws.com" },
+        Action    = "sts:AssumeRole"
+      }
+    ]
+  })
+
+  tags = var.common_tags
+}
+
+# 4️⃣2️⃣ IAM Policy for AWS Config Role
+resource "aws_iam_role_policy" "config_role_policy" {
+  name = "${var.project_name}-config-policy"
+  role = aws_iam_role.config_role.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+          "s3:*",
+          "config:*",
+          "ec2:Describe*",
+          "iam:List*",
+          "iam:Get*",
+          "rds:Describe*",
+          "s3:ListAllMyBuckets",
+          "lambda:List*",
+          "lambda:Get*"
+        ],
+        Resource = "*"
+      }
+    ]
+  })
+}
+
+# 4️⃣3️⃣ Create AWS Config Recorder
+resource "aws_config_configuration_recorder" "tanvora_config" {
+  name     = "${var.project_name}-config-recorder"
+  role_arn = aws_iam_role.config_role.arn
+
+  recording_group {
+    all_supported                 = true
+    include_global_resource_types = true
+  }
+}
+
+# 4️⃣4️⃣ Delivery Channel (S3 + optional SNS)
+resource "aws_config_delivery_channel" "tanvora_channel" {
+  name           = "${var.project_name}-config-channel"
+  s3_bucket_name = aws_s3_bucket.config_bucket.bucket
+  depends_on     = [aws_config_configuration_recorder.tanvora_config]
+}
+
+# 4️⃣5️⃣ Enable AWS Config Recorder
+resource "aws_config_configuration_recorder_status" "tanvora_config_status" {
+  name       = aws_config_configuration_recorder.tanvora_config.name
+  is_enabled = true
+
+  depends_on = [aws_config_delivery_channel.tanvora_channel]
+}

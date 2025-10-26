@@ -108,3 +108,13 @@ output "cloudtrail_trail_name" {
   description = "Name of the CloudTrail trail"
   value       = aws_cloudtrail.tanvora_trail.name
 }
+
+output "config_bucket_name" {
+  description = "S3 bucket name where AWS Config stores configuration snapshots"
+  value       = aws_s3_bucket.config_bucket.bucket
+}
+
+output "config_recorder_name" {
+  description = "AWS Config recorder name"
+  value       = aws_config_configuration_recorder.tanvora_config.name
+}
