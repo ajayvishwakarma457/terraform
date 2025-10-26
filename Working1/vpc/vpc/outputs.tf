@@ -133,3 +133,18 @@ output "config_alerts_sns_topic" {
   description = "SNS topic ARN for compliance alerts"
   value       = aws_sns_topic.config_alerts_topic.arn
 }
+
+output "iam_admin_user" {
+  description = "Admin IAM user name"
+  value       = aws_iam_user.ajay_admin.name
+}
+
+output "iam_developer_user" {
+  description = "Developer IAM user name"
+  value       = aws_iam_user.raunak_dev.name
+}
+
+output "iam_auditor_user" {
+  description = "Auditor IAM user name"
+  value       = aws_iam_user.audit_user.name
+}

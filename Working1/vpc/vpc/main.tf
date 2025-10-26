@@ -843,3 +843,70 @@ resource "aws_cloudwatch_event_target" "config_to_sns_with_role" {
   role_arn  = aws_iam_role.eventbridge_sns_role.arn
 }
 
+# 5️⃣3️⃣ IAM Group for Administrators
+resource "aws_iam_group" "admins" {
+  name = "Administrators"
+}
+
+# Attach AWS managed AdministratorAccess policy
+resource "aws_iam_group_policy_attachment" "admins_attach" {
+  group      = aws_iam_group.admins.name
+  policy_arn = "arn:aws:iam::aws:policy/AdministratorAccess"
+}
+
+# 5️⃣4️⃣ IAM Group for Developers (Limited Access)
+resource "aws_iam_group" "developers" {
+  name = "Developers"
+}
+
+# Attach Developer-specific managed policies
+resource "aws_iam_group_policy_attachment" "developers_attach" {
+  group      = aws_iam_group.developers.name
+  policy_arn = "arn:aws:iam::aws:policy/PowerUserAccess"
+}
+
+# 5️⃣5️⃣ IAM Group for Auditors (Read-only)
+resource "aws_iam_group" "auditors" {
+  name = "Auditors"
+}
+
+# Attach ReadOnlyAccess policy
+resource "aws_iam_group_policy_attachment" "auditors_attach" {
+  group      = aws_iam_group.auditors.name
+  policy_arn = "arn:aws:iam::aws:policy/ReadOnlyAccess"
+}
+
+# 5️⃣6️⃣ IAM Users
+resource "aws_iam_user" "ajay_admin" {
+  name          = "ajay.vishwakarma"
+  force_destroy = true  # allows deletion without manual cleanup
+  tags          = var.common_tags
+}
+
+resource "aws_iam_user" "raunak_dev" {
+  name          = "raunak.developer"
+  force_destroy = true
+  tags          = var.common_tags
+}
+
+resource "aws_iam_user" "audit_user" {
+  name          = "audit.user"
+  force_destroy = true
+  tags          = var.common_tags
+}
+
+# 5️⃣7️⃣ Add users to their groups
+resource "aws_iam_user_group_membership" "ajay_to_admins" {
+  user   = aws_iam_user.ajay_admin.name
+  groups = [aws_iam_group.admins.name]
+}
+
+resource "aws_iam_user_group_membership" "raunak_to_devs" {
+  user   = aws_iam_user.raunak_dev.name
+  groups = [aws_iam_group.developers.name]
+}
+
+resource "aws_iam_user_group_membership" "audit_to_auditors" {
+  user   = aws_iam_user.audit_user.name
+  groups = [aws_iam_group.auditors.name]
+}
