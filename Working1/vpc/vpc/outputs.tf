@@ -63,3 +63,23 @@ output "dynamodb_gateway_endpoint_id" {
   value       = aws_vpc_endpoint.dynamodb_gateway.id
 }
 
+output "ssm_interface_endpoint_id" {
+  description = "ID of the SSM Interface Endpoint"
+  value       = aws_vpc_endpoint.ssm_endpoint.id
+}
+
+output "ec2_messages_endpoint_id" {
+  description = "ID of the EC2 Messages Interface Endpoint"
+  value       = aws_vpc_endpoint.ec2_messages_endpoint.id
+}
+
+output "ssmmessages_endpoint_id" {
+  description = "ID of the SSM Messages Interface Endpoint"
+  value       = aws_vpc_endpoint.ssmmessages_endpoint.id
+}
+
+output "cloudwatch_endpoint_id" {
+  description = "ID of the CloudWatch Logs Interface Endpoint"
+  value       = aws_vpc_endpoint.cloudwatch_endpoint.id
+}
+
