@@ -383,3 +383,5 @@ resource "aws_config_config_rule" "iam_password_policy" {
     Name = "IAM Password Policy Rule"
   })
 }
+
+
