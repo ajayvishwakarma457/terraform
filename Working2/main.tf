@@ -83,6 +83,15 @@ module "dynamodb" {
   sort_key_type = "S"
 }
 
+module "elasticache" {
+  source             = "./modules/elasticache"
+  project_name       = var.project_name
+  common_tags        = var.common_tags
+  vpc_id             = module.vpc.vpc_id
+  private_subnet_ids = module.vpc.private_subnet_ids
+  # private_cidr_blocks = [var.private_subnet_cidr_a, var.private_subnet_cidr_b]
+  private_cidr_blocks = var.private_subnet_cidrs
+}
 
 
 # module "monitoring" {

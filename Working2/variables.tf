@@ -58,3 +58,5 @@ variable "alert_email" {
   type        = string
   default     = "" # set to "you@example.com" to auto-subscribe
 }
+
+
