@@ -26,36 +26,30 @@ variable "common_tags" {
 }
 
 # -------------------------------
-# Network Configuration
+# Network Configuration (Dynamic)
 # -------------------------------
 variable "vpc_cidr" {
-  description = "CIDR block for VPC"
+  description = "CIDR block for the VPC"
   type        = string
   default     = "10.0.0.0/16"
 }
 
-variable "public_subnet_cidr" {
-  description = "CIDR for public subnet"
-  type        = string
-  default     = "10.0.1.0/24"
+variable "public_subnet_cidrs" {
+  description = "List of public subnet CIDRs across AZs"
+  type        = list(string)
+  default     = ["10.0.1.0/24", "10.0.2.0/24"]
 }
 
-variable "private_subnet_cidr" {
-  description = "CIDR for private subnet"
-  type        = string
-  default     = "10.0.2.0/24"
+variable "private_subnet_cidrs" {
+  description = "List of private subnet CIDRs across AZs"
+  type        = list(string)
+  default     = ["10.0.3.0/24", "10.0.4.0/24"]
 }
 
-variable "public_az" {
-  description = "Availability zone for public subnet"
-  type        = string
-  default     = "ap-south-1a"
-}
-
-variable "private_az" {
-  description = "Availability zone for private subnet"
-  type        = string
-  default     = "ap-south-1b"
+variable "availability_zones" {
+  description = "Availability Zones to spread subnets across"
+  type        = list(string)
+  default     = ["ap-south-1a", "ap-south-1b"]
 }
 
 
