@@ -59,4 +59,9 @@ variable "alert_email" {
   default     = "" # set to "you@example.com" to auto-subscribe
 }
 
+variable "redis_auth_token" {
+  description = "Redis auth token (do not commit to Git)"
+  type        = string
+  sensitive   = true
+}
 
