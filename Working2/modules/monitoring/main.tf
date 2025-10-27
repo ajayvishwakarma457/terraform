@@ -280,3 +280,106 @@ resource "aws_cloudwatch_event_target" "noncompliant_to_sns" {
   arn       = aws_sns_topic.config_alerts.arn
   role_arn  = aws_iam_role.events_to_sns_role.arn
 }
+
+
+# ================================
+# AWS Config Managed Rules (Compliance Automation)
+# ================================
+
+# 🚫 Prevent S3 buckets from being public
+resource "aws_config_config_rule" "s3_bucket_public_read_prohibited" {
+  name = "s3-bucket-public-read-prohibited"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "S3_BUCKET_PUBLIC_READ_PROHIBITED"
+  }
+
+  tags = merge(var.common_tags, {
+    Name = "S3 Bucket Public Read Prohibited"
+  })
+}
+
+# 🚫 Prevent public write access on S3 buckets
+resource "aws_config_config_rule" "s3_bucket_public_write_prohibited" {
+  name = "s3-bucket-public-write-prohibited"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "S3_BUCKET_PUBLIC_WRITE_PROHIBITED"
+  }
+
+  tags = merge(var.common_tags, {
+    Name = "S3 Bucket Public Write Prohibited"
+  })
+}
+
+# 🔒 Ensure EBS volumes are encrypted
+resource "aws_config_config_rule" "encrypted_volumes" {
+  name = "encrypted-volumes"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "ENCRYPTED_VOLUMES"
+  }
+
+  tags = merge(var.common_tags, {
+    Name = "Encrypted EBS Volumes"
+  })
+}
+
+# 🔐 Ensure RDS instances are encrypted
+resource "aws_config_config_rule" "rds_storage_encrypted" {
+  name = "rds-storage-encrypted"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "RDS_STORAGE_ENCRYPTED"
+  }
+
+  tags = merge(var.common_tags, {
+    Name = "RDS Storage Encrypted"
+  })
+}
+
+# 🚷 Ensure security groups do not allow unrestricted SSH (port 22)
+resource "aws_config_config_rule" "restricted_ssh" {
+  name = "restricted-ssh"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "INCOMING_SSH_DISABLED"
+  }
+
+  tags = merge(var.common_tags, {
+    Name = "Restricted SSH Access"
+  })
+}
+
+# 🔍 Ensure CloudTrail is enabled across all regions
+resource "aws_config_config_rule" "cloudtrail_enabled" {
+  name = "cloudtrail-enabled"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "CLOUD_TRAIL_ENABLED"
+  }
+
+  tags = merge(var.common_tags, {
+    Name = "CloudTrail Enabled"
+  })
+}
+
+# 🛡️ Ensure IAM password policy is strong
+resource "aws_config_config_rule" "iam_password_policy" {
+  name = "iam-password-policy"
+
+  source {
+    owner             = "AWS"
+    source_identifier = "IAM_PASSWORD_POLICY"
+  }
+
+  tags = merge(var.common_tags, {
+    Name = "IAM Password Policy Rule"
+  })
+}
