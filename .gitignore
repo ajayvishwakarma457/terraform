@@ -32,3 +32,6 @@ Working/.env
 
 Working1/**/.terraform/
 Working1/**/.terraform.lock.hcl
+
+Working2/**/.terraform/
+Working2/**/.terraform.lock.hcl
