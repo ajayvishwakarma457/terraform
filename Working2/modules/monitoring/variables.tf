@@ -1,20 +1,20 @@
 variable "aws_region" {
   type        = string
-  description = "AWS region (for bucket names and ARNs)"
+  description = "AWS region for resource naming and ARNs"
 }
 
 variable "project_name" {
   type        = string
-  description = "Project prefix for naming"
+  description = "Prefix name for project resources"
 }
 
 variable "common_tags" {
   type        = map(string)
-  description = "Tags to apply to all resources"
+  description = "Common tags for all resources"
 }
 
 variable "alert_email" {
   type        = string
-  description = "Email for compliance alerts (leave empty to skip subscription)"
+  description = "Email for receiving compliance alerts (optional)"
   default     = ""
 }

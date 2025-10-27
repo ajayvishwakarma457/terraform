@@ -1,10 +1,18 @@
-# -------------------------------
-# Monitoring: CloudTrail + AWS Config + Alerts
-# -------------------------------
+########################################
+# MODULE: Monitoring & Compliance Stack
+# Components:
+#  - CloudTrail (multi-region)
+#  - AWS Config
+#  - SNS Alerts (NON_COMPLIANT)
+#  - CloudWatch Logs integration
+#  - S3 encryption + policies
+########################################
 
 data "aws_caller_identity" "me" {}
 
-# ========= CloudTrail (multi-region) =========
+########################################
+# 1️⃣ CLOUDTRAIL
+########################################
 
 # S3 bucket for CloudTrail logs
 resource "aws_s3_bucket" "cloudtrail_bucket" {
@@ -12,14 +20,15 @@ resource "aws_s3_bucket" "cloudtrail_bucket" {
   tags   = merge(var.common_tags, { Name = "${var.project_name}-cloudtrail-bucket" })
 }
 
+# Enable versioning
 resource "aws_s3_bucket_versioning" "cloudtrail_ver" {
   bucket = aws_s3_bucket.cloudtrail_bucket.id
   versioning_configuration { status = "Enabled" }
 }
 
-resource "aws_s3_bucket_server_side_encryption_configuration" "config_sse" {
-  bucket = aws_s3_bucket.config_bucket.id
-
+# Encrypt logs
+resource "aws_s3_bucket_server_side_encryption_configuration" "cloudtrail_sse" {
+  bucket = aws_s3_bucket.cloudtrail_bucket.id
   rule {
     apply_server_side_encryption_by_default {
       sse_algorithm = "AES256"
@@ -27,7 +36,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "config_sse" {
   }
 }
 
-# 🔒 Prevent public access to CloudTrail logs (security best practice)
+# Prevent public access
 resource "aws_s3_bucket_public_access_block" "cloudtrail_pab" {
   bucket                  = aws_s3_bucket.cloudtrail_bucket.id
   block_public_acls       = true
@@ -36,8 +45,7 @@ resource "aws_s3_bucket_public_access_block" "cloudtrail_pab" {
   restrict_public_buckets = true
 }
 
-
-# ✅ Allow CloudTrail to write to the CloudTrail S3 bucket
+# Bucket policy for CloudTrail
 resource "aws_s3_bucket_policy" "cloudtrail_policy" {
   bucket = aws_s3_bucket.cloudtrail_bucket.id
 
@@ -45,21 +53,17 @@ resource "aws_s3_bucket_policy" "cloudtrail_policy" {
     Version = "2012-10-17",
     Statement = [
       {
-        Sid      = "AWSCloudTrailAclCheck",
-        Effect   = "Allow",
-        Principal = {
-          Service = "cloudtrail.amazonaws.com"
-        },
-        Action   = "s3:GetBucketAcl",
+        Sid = "AWSCloudTrailAclCheck",
+        Effect = "Allow",
+        Principal = { Service = "cloudtrail.amazonaws.com" },
+        Action = "s3:GetBucketAcl",
         Resource = aws_s3_bucket.cloudtrail_bucket.arn
       },
       {
-        Sid      = "AWSCloudTrailWrite",
-        Effect   = "Allow",
-        Principal = {
-          Service = "cloudtrail.amazonaws.com"
-        },
-        Action   = "s3:PutObject",
+        Sid = "AWSCloudTrailWrite",
+        Effect = "Allow",
+        Principal = { Service = "cloudtrail.amazonaws.com" },
+        Action = "s3:PutObject",
         Resource = "${aws_s3_bucket.cloudtrail_bucket.arn}/AWSLogs/${data.aws_caller_identity.me.account_id}/*",
         Condition = {
           StringEquals = {
@@ -71,42 +75,42 @@ resource "aws_s3_bucket_policy" "cloudtrail_policy" {
   })
 }
 
-
-# CloudWatch Log Group (optional but recommended)
+# CloudWatch log group for CloudTrail
 resource "aws_cloudwatch_log_group" "trail_lg" {
   name              = "/aws/cloudtrail/${var.project_name}"
   retention_in_days = 30
   tags              = var.common_tags
 }
 
-# IAM role to let CloudTrail push to CW Logs
+# IAM role for CloudTrail to push logs
 resource "aws_iam_role" "trail_cw_role" {
   name = "${var.project_name}-cloudtrail-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Effect: "Allow",
-      Principal: { Service: "cloudtrail.amazonaws.com" },
-      Action: "sts:AssumeRole"
+      Effect    = "Allow",
+      Principal = { Service = "cloudtrail.amazonaws.com" },
+      Action    = "sts:AssumeRole"
     }]
   })
   tags = var.common_tags
 }
 
+# IAM policy for CloudTrail log publishing
 resource "aws_iam_role_policy" "trail_cw_policy" {
   name = "${var.project_name}-cloudtrail-policy"
   role = aws_iam_role.trail_cw_role.id
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [{
-      Effect: "Allow",
-      Action: ["logs:CreateLogStream","logs:PutLogEvents"],
-      Resource: "${aws_cloudwatch_log_group.trail_lg.arn}:*"
+      Effect   = "Allow",
+      Action   = ["logs:CreateLogStream", "logs:PutLogEvents"],
+      Resource = "${aws_cloudwatch_log_group.trail_lg.arn}:*"
     }]
   })
 }
 
-# CloudTrail (fix: use full log group ARN format with :*)
+# CloudTrail configuration
 resource "aws_cloudtrail" "trail" {
   name                          = "${var.project_name}-trail"
   s3_bucket_name                = aws_s3_bucket.cloudtrail_bucket.id
@@ -118,11 +122,17 @@ resource "aws_cloudtrail" "trail" {
   cloud_watch_logs_role_arn  = aws_iam_role.trail_cw_role.arn
 
   tags = merge(var.common_tags, { Name = "${var.project_name}-cloudtrail" })
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
 
-# ========= AWS Config =========
+########################################
+# 2️⃣ AWS CONFIG
+########################################
 
-# S3 bucket for AWS Config
+# S3 bucket for Config snapshots
 resource "aws_s3_bucket" "config_bucket" {
   bucket = "${var.project_name}-config-${var.aws_region}"
   tags   = merge(var.common_tags, { Name = "${var.project_name}-config-bucket" })
@@ -133,16 +143,15 @@ resource "aws_s3_bucket_versioning" "config_ver" {
   versioning_configuration { status = "Enabled" }
 }
 
-# resource "aws_s3_bucket_server_side_encryption_configuration" "config_sse" {
-#   bucket = aws_s3_bucket.config_bucket.id
-#   rule { 
-#     apply_server_side_encryption_by_default { 
-#       sse_algorithm = "AES256" 
-#       }
-#     }
-# }
+resource "aws_s3_bucket_server_side_encryption_configuration" "config_sse" {
+  bucket = aws_s3_bucket.config_bucket.id
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
 
-# Prevent public access to AWS Config bucket (security best practice)
 resource "aws_s3_bucket_public_access_block" "config_pab" {
   bucket                  = aws_s3_bucket.config_bucket.id
   block_public_acls       = true
@@ -151,59 +160,66 @@ resource "aws_s3_bucket_public_access_block" "config_pab" {
   restrict_public_buckets = true
 }
 
-# Allow AWS Config to write to the bucket
+# S3 bucket policy for AWS Config
 resource "aws_s3_bucket_policy" "config_policy" {
   bucket = aws_s3_bucket.config_bucket.id
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
       {
-        Sid: "AWSConfigBucketPermissionsCheck",
-        Effect: "Allow",
-        Principal: { Service: "config.amazonaws.com" },
-        Action: "s3:GetBucketAcl",
-        Resource: aws_s3_bucket.config_bucket.arn
+        Sid      = "AWSConfigBucketPermissionsCheck",
+        Effect   = "Allow",
+        Principal = { Service = "config.amazonaws.com" },
+        Action   = "s3:GetBucketAcl",
+        Resource = aws_s3_bucket.config_bucket.arn
       },
       {
-        Sid: "AWSConfigBucketDelivery",
-        Effect: "Allow",
-        Principal: { Service: "config.amazonaws.com" },
-        Action: "s3:PutObject",
-        Resource: "${aws_s3_bucket.config_bucket.arn}/AWSLogs/${data.aws_caller_identity.me.account_id}/*",
-        Condition: { StringEquals: { "s3:x-amz-acl": "bucket-owner-full-control" } }
+        Sid      = "AWSConfigBucketDelivery",
+        Effect   = "Allow",
+        Principal = { Service = "config.amazonaws.com" },
+        Action   = "s3:PutObject",
+        Resource = "${aws_s3_bucket.config_bucket.arn}/AWSLogs/${data.aws_caller_identity.me.account_id}/*",
+        Condition = { StringEquals = { "s3:x-amz-acl" = "bucket-owner-full-control" } }
       }
     ]
   })
 }
 
-# IAM role for AWS Config recorder
+# IAM role for AWS Config
 resource "aws_iam_role" "config_role" {
   name = "${var.project_name}-config-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
-    Statement: [{
-      Effect: "Allow",
-      Principal: { Service: "config.amazonaws.com" },
-      Action: "sts:AssumeRole"
+    Statement = [{
+      Effect    = "Allow",
+      Principal = { Service = "config.amazonaws.com" },
+      Action    = "sts:AssumeRole"
     }]
   })
   tags = var.common_tags
 }
 
-# Minimal inline permissions for AWS Config
 resource "aws_iam_role_policy" "config_inline" {
   name = "${var.project_name}-config-inline"
   role = aws_iam_role.config_role.id
   policy = jsonencode({
-    Version: "2012-10-17",
-    Statement: [
-      { Effect: "Allow", Action: ["s3:PutObject","s3:GetBucketAcl","s3:ListBucket"], Resource: ["${aws_s3_bucket.config_bucket.arn}","${aws_s3_bucket.config_bucket.arn}/*"] },
-      { Effect: "Allow", Action: ["config:*","ec2:Describe*","iam:Get*","iam:List*","rds:Describe*","lambda:Get*","lambda:List*","s3:Get*","s3:List*"], Resource: "*" }
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = ["s3:PutObject", "s3:GetBucketAcl", "s3:ListBucket"],
+        Resource = ["${aws_s3_bucket.config_bucket.arn}", "${aws_s3_bucket.config_bucket.arn}/*"]
+      },
+      {
+        Effect   = "Allow",
+        Action   = ["config:*", "ec2:Describe*", "iam:Get*", "iam:List*", "rds:Describe*", "lambda:Get*", "lambda:List*", "s3:Get*", "s3:List*"],
+        Resource = "*"
+      }
     ]
   })
 }
 
-# Recorder + delivery channel + enable
+# Config recorder
 resource "aws_config_configuration_recorder" "recorder" {
   name     = "${var.project_name}-config-recorder"
   role_arn = aws_iam_role.config_role.arn
@@ -213,26 +229,35 @@ resource "aws_config_configuration_recorder" "recorder" {
   }
 }
 
+# Delivery channel
 resource "aws_config_delivery_channel" "channel" {
   name           = "${var.project_name}-config-channel"
   s3_bucket_name = aws_s3_bucket.config_bucket.bucket
   depends_on     = [aws_config_configuration_recorder.recorder]
 }
 
+# Enable Config recorder
 resource "aws_config_configuration_recorder_status" "status" {
   name       = aws_config_configuration_recorder.recorder.name
   is_enabled = true
   depends_on = [aws_config_delivery_channel.channel]
 }
 
-# ========= Optional alerts: SNS + EventBridge (email on NON_COMPLIANT) =========
+# Local dependency for all rules
+locals {
+  config_ready = [aws_config_configuration_recorder_status.status]
+}
+
+########################################
+# 3️⃣ SNS + EVENTBRIDGE ALERTS
+########################################
 
 resource "aws_sns_topic" "config_alerts" {
   name = "${var.project_name}-config-alerts"
   tags = merge(var.common_tags, { Name = "${var.project_name}-config-alerts" })
 }
 
-# Subscribe email only if provided
+# Optional email subscription
 resource "aws_sns_topic_subscription" "email_sub" {
   count     = length(var.alert_email) > 0 ? 1 : 0
   topic_arn = aws_sns_topic.config_alerts.arn
@@ -240,26 +265,27 @@ resource "aws_sns_topic_subscription" "email_sub" {
   endpoint  = var.alert_email
 }
 
+# EventBridge rule for non-compliance
 resource "aws_cloudwatch_event_rule" "noncompliant_rule" {
   name        = "${var.project_name}-config-noncompliance"
   description = "Notify when AWS Config marks a resource NON_COMPLIANT"
   event_pattern = jsonencode({
-    "source": ["aws.config"],
-    "detail-type": ["Config Rules Compliance Change"],
-    "detail": { "newEvaluationResult": { "complianceType": ["NON_COMPLIANT"] } }
+    "source"      : ["aws.config"],
+    "detail-type" : ["Config Rules Compliance Change"],
+    "detail"      : { "newEvaluationResult" : { "complianceType" : ["NON_COMPLIANT"] } }
   })
   tags = var.common_tags
 }
 
-# Role to allow EventBridge → SNS
+# Role for EventBridge → SNS
 resource "aws_iam_role" "events_to_sns_role" {
   name = "${var.project_name}-events-sns-role"
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
-    Statement: [{
-      Effect: "Allow",
-      Principal: { Service: "events.amazonaws.com" },
-      Action: "sts:AssumeRole"
+    Statement = [{
+      Effect    = "Allow",
+      Principal = { Service = "events.amazonaws.com" },
+      Action    = "sts:AssumeRole"
     }]
   })
   tags = var.common_tags
@@ -269,8 +295,8 @@ resource "aws_iam_role_policy" "events_to_sns_policy" {
   name = "${var.project_name}-events-sns-policy"
   role = aws_iam_role.events_to_sns_role.id
   policy = jsonencode({
-    Version: "2012-10-17",
-    Statement: [{ Effect: "Allow", Action: "sns:Publish", Resource: aws_sns_topic.config_alerts.arn }]
+    Version = "2012-10-17",
+    Statement = [{ Effect = "Allow", Action = "sns:Publish", Resource = aws_sns_topic.config_alerts.arn }]
   })
 }
 
@@ -281,107 +307,76 @@ resource "aws_cloudwatch_event_target" "noncompliant_to_sns" {
   role_arn  = aws_iam_role.events_to_sns_role.arn
 }
 
+########################################
+# 4️⃣ AWS CONFIG MANAGED RULES
+########################################
 
-# ================================
-# AWS Config Managed Rules (Compliance Automation)
-# ================================
-
-# 🚫 Prevent S3 buckets from being public
 resource "aws_config_config_rule" "s3_bucket_public_read_prohibited" {
   name = "s3-bucket-public-read-prohibited"
-
   source {
     owner             = "AWS"
     source_identifier = "S3_BUCKET_PUBLIC_READ_PROHIBITED"
   }
-
-  tags = merge(var.common_tags, {
-    Name = "S3 Bucket Public Read Prohibited"
-  })
+  depends_on = local.config_ready
+  tags       = merge(var.common_tags, { Name = "S3 Bucket Public Read Prohibited" })
 }
 
-# 🚫 Prevent public write access on S3 buckets
 resource "aws_config_config_rule" "s3_bucket_public_write_prohibited" {
   name = "s3-bucket-public-write-prohibited"
-
   source {
     owner             = "AWS"
     source_identifier = "S3_BUCKET_PUBLIC_WRITE_PROHIBITED"
   }
-
-  tags = merge(var.common_tags, {
-    Name = "S3 Bucket Public Write Prohibited"
-  })
+  depends_on = local.config_ready
+  tags       = merge(var.common_tags, { Name = "S3 Bucket Public Write Prohibited" })
 }
 
-# 🔒 Ensure EBS volumes are encrypted
 resource "aws_config_config_rule" "encrypted_volumes" {
   name = "encrypted-volumes"
-
   source {
     owner             = "AWS"
     source_identifier = "ENCRYPTED_VOLUMES"
   }
-
-  tags = merge(var.common_tags, {
-    Name = "Encrypted EBS Volumes"
-  })
+  depends_on = local.config_ready
+  tags       = merge(var.common_tags, { Name = "Encrypted EBS Volumes" })
 }
 
-# 🔐 Ensure RDS instances are encrypted
 resource "aws_config_config_rule" "rds_storage_encrypted" {
   name = "rds-storage-encrypted"
-
   source {
     owner             = "AWS"
     source_identifier = "RDS_STORAGE_ENCRYPTED"
   }
-
-  tags = merge(var.common_tags, {
-    Name = "RDS Storage Encrypted"
-  })
+  depends_on = local.config_ready
+  tags       = merge(var.common_tags, { Name = "RDS Storage Encrypted" })
 }
 
-# 🚷 Ensure security groups do not allow unrestricted SSH (port 22)
 resource "aws_config_config_rule" "restricted_ssh" {
   name = "restricted-ssh"
-
   source {
     owner             = "AWS"
     source_identifier = "INCOMING_SSH_DISABLED"
   }
-
-  tags = merge(var.common_tags, {
-    Name = "Restricted SSH Access"
-  })
+  depends_on = local.config_ready
+  tags       = merge(var.common_tags, { Name = "Restricted SSH Access" })
 }
 
-# 🔍 Ensure CloudTrail is enabled across all regions
 resource "aws_config_config_rule" "cloudtrail_enabled" {
   name = "cloudtrail-enabled"
-
   source {
     owner             = "AWS"
     source_identifier = "CLOUD_TRAIL_ENABLED"
   }
-
-  tags = merge(var.common_tags, {
-    Name = "CloudTrail Enabled"
-  })
+  depends_on = local.config_ready
+  tags       = merge(var.common_tags, { Name = "CloudTrail Enabled" })
 }
 
-# 🛡️ Ensure IAM password policy is strong
 resource "aws_config_config_rule" "iam_password_policy" {
   name = "iam-password-policy"
-
   source {
     owner             = "AWS"
     source_identifier = "IAM_PASSWORD_POLICY"
   }
-
-  tags = merge(var.common_tags, {
-    Name = "IAM Password Policy Rule"
-  })
+  depends_on = local.config_ready
+  tags       = merge(var.common_tags, { Name = "IAM Password Policy Rule" })
 }
-
-
