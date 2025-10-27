@@ -142,6 +142,15 @@ resource "aws_s3_bucket_versioning" "config_ver" {
 #     }
 # }
 
+# Prevent public access to AWS Config bucket (security best practice)
+resource "aws_s3_bucket_public_access_block" "config_pab" {
+  bucket                  = aws_s3_bucket.config_bucket.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 # Allow AWS Config to write to the bucket
 resource "aws_s3_bucket_policy" "config_policy" {
   bucket = aws_s3_bucket.config_bucket.id
