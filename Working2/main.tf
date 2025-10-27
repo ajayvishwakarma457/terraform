@@ -25,3 +25,10 @@ module "ec2" {
   private_subnet_id  = module.vpc.private_subnet_id
   ec2_role_name      = module.iam.ec2_role_name
 }
+
+module "backup" {
+  source       = "./modules/backup"
+  project_name = var.project_name
+  common_tags  = var.common_tags
+  ec2_id       = module.ec2.private_ec2_id
+}
