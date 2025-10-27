@@ -40,7 +40,7 @@ resource "aws_iam_instance_profile" "ec2_profile" {
 resource "aws_instance" "private_ec2" {
   ami                         = var.ec2_ami
   instance_type               = var.instance_type
-  subnet_id                   = var.private_subnet_id
+  subnet_id                   = var.private_subnet_ids[0]
   iam_instance_profile         = aws_iam_instance_profile.ec2_profile.name
   vpc_security_group_ids      = [aws_security_group.ec2_private_sg.id]
   associate_public_ip_address = false

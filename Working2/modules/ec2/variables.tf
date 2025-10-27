@@ -18,9 +18,9 @@ variable "vpc_cidr" {
   type        = string
 }
 
-variable "private_subnet_id" {
-  description = "Private subnet ID for EC2 instance"
-  type        = string
+variable "private_subnet_ids" {
+  description = "List of private subnet IDs for EC2 placement"
+  type        = list(string)
 }
 
 variable "ec2_role_name" {
