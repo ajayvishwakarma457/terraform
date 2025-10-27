@@ -61,3 +61,9 @@ module "vpc" {
   public_az            = var.public_az
   private_az           = var.private_az
 }
+
+module "iam" {
+  source       = "./modules/iam"
+  project_name = var.project_name
+  common_tags  = var.common_tags
+}
