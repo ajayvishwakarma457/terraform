@@ -57,3 +57,10 @@ variable "private_az" {
   type        = string
   default     = "ap-south-1b"
 }
+
+
+variable "alert_email" {
+  description = "Email to receive compliance alerts"
+  type        = string
+  default     = "" # set to "you@example.com" to auto-subscribe
+}
