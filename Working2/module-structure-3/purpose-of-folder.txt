@@ -1,0 +1,10 @@
+
+Purpose of Each Folder
+    | Folder/File                 | Purpose                                                       |
+    | --------------------------- | ------------------------------------------------------------- |
+    | `main.tf`                   | Calls all modules and passes variables                        |
+    | `provider.tf`               | Defines AWS provider and backend (S3, DynamoDB)               |
+    | `modules/`                  | Each logical layer of infra (vpc, iam, ec2, etc.) is isolated |
+    | `envs/dev/terraform.tfvars` | Stores environment-specific values (CIDR, AZs, names, etc.)   |
+    | `outputs.tf`                | Collects outputs from modules for easy reference              |
+    | `notes/`                    | Optional for your design notes, screenshots, etc.             |

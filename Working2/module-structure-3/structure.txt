@@ -1,0 +1,44 @@
+terraform-project/
+│
+├── main.tf                 # Root entry point (calls modules, providers, backend config)
+├── variables.tf            # Root-level input variables
+├── outputs.tf              # Root-level outputs (aggregated from modules)
+├── provider.tf             # AWS provider + region + backend (S3/DynamoDB) config
+│
+├── modules/                # Reusable building blocks
+│   ├── vpc/                # VPC-related resources
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   │
+│   ├── iam/                # IAM users, groups, roles, policies
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   │
+│   ├── ec2/                # EC2 instance, SG, instance profile
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   │
+│   ├── backup/             # AWS Backup Vault, Plans, Roles
+│   │   ├── main.tf
+│   │   ├── variables.tf
+│   │   └── outputs.tf
+│   │
+│   └── monitoring/         # CloudTrail, Config, SNS, EventBridge
+│       ├── main.tf
+│       ├── variables.tf
+│       └── outputs.tf
+│
+├── envs/                   # Environment-specific variable overrides
+│   ├── dev/
+│   │   └── terraform.tfvars
+│   ├── stage/
+│   │   └── terraform.tfvars
+│   └── prod/
+│       └── terraform.tfvars
+│
+├── notes/                  # Documentation or screenshots (your current notes folder)
+│
+└── terraform.tfstate       # Will later be remote (S3 backend)
