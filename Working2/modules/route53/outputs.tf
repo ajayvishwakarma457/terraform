@@ -23,3 +23,7 @@ output "api_record_name" {
   description = "API record name (if created)"
 }
 
+output "app_domain_name" {
+  value       = "app.spakcommgroup.com"
+  description = "Public domain name pointing to ALB"
+}
