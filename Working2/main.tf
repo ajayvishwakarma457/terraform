@@ -93,12 +93,28 @@ module "elasticache" {
   private_cidr_blocks = var.private_subnet_cidrs
 }
 
-
 module "monitoring" {
   source       = "./modules/monitoring"
   project_name = var.project_name
   aws_region   = var.aws_region
   common_tags  = var.common_tags
   alert_email  = var.alert_email
+}
+
+module "cloudfront" {
+  source       = "./modules/cloudfront"
+  project_name = var.project_name
+  aws_region   = var.aws_region
+  common_tags  = var.common_tags
+
+  # optional: set if you want a specific name
+  # bucket_name = "tanvora-cdn-static"
+
+  # 🔐 custom domain (optional)
+  # domain_name     = "cdn.tanvora.com"
+  # alternate_names = ["static.tanvora.com"]
+
+  # If you want the module to also create the ACM DNS validation records:
+  # route53_zone_id = "Z123456ABCDEFG"
 }
 
