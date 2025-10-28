@@ -1,4 +1,14 @@
 
+module "acm" {
+  source          = "./modules/acm"
+  aws_region      = var.aws_region
+  project_name    = var.project_name
+  domain_name     = var.domain_name
+  route53_zone_id = module.route53.route53_zone_id
+  common_tags     = var.common_tags
+}
+
+
 module "vpc" {
   source = "./modules/vpc"
 
@@ -56,6 +66,7 @@ module "scaling" {
   # App
   health_check_path = "/"
   # user_data               = file("${path.module}/bootstrap.sh")  # optional
+  alb_certificate_arn = module.acm.alb_cert_arn # 👈 NEW
 }
 
 module "rds" {
@@ -135,6 +146,7 @@ module "route53" {
   api_dns_name      = module.scaling.alb_dns_name
   api_zone_id       = module.scaling.alb_zone_id
 }
+
 
 
 

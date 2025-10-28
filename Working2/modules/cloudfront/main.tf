@@ -187,3 +187,5 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
     ]
   })
 }
+
+
