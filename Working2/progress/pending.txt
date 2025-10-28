@@ -1,0 +1,72 @@
+Pending / Next Steps (to make it fully production-ready)
+
+1. S3 + CloudFront Setup for Static Assets
+        Create an S3 bucket for static files (frontend / React Native web build or asset CDN).
+        Add a CloudFront distribution in front of it.
+        Configure ACM SSL certificate for your domain (e.g., cdn.tanvora.com).
+        Restrict direct bucket access (Origin Access Control / OAC).
+    
+        Suggested Terraform module:
+            modules/cloudfront/ with:
+                aws_cloudfront_distribution
+                aws_s3_bucket
+                aws_acm_certificate
+
+
+22️⃣Route 53 DNS Integration
+    Add Route 53 hosted zone for tanvora.com.
+    Create records:
+        A → ALB DNS for app
+        A / CNAME → CloudFront for CDN
+        Optionally api.tanvora.com → API Gateway / ALB
+    Suggested module: modules/route53/
+
+
+3.3️⃣CloudWatch Alarms & Metrics Dashboard
+    Set up alarms for:
+        CPUUtilization > 80%
+        RDS free storage < 10%
+        ElastiCache memory usage > 75%
+        Auto Scaling activity failures
+    Create a CloudWatch Dashboard for quick health overview.
+    Suggested module: modules/monitoring/
+
+
+
+3. AWS Backup Policies
+    Centralize backups for:
+    EC2 (EBS snapshots)
+        RDS
+        DynamoDB
+        Use AWS Backup Plan + Vault for compliance.
+📂 Suggested module: modules/backup/ (you already started partially)
+
+
+4. SSM / Bastion Access
+    Enable AWS Systems Manager Session Manager for secure EC2 SSH-less access.
+    Disable direct SSH (port 22) in production.
+    📂 Suggested module: modules/ssm/
+
+
+5. Cost Monitoring & Budgets
+    Create AWS Budgets + SNS alert when monthly spend exceeds threshold.
+    Optionally enable Cost Explorer + Cost Anomaly Detection.
+    📂 Suggested module: modules/billing/
+
+
+6. Terraform Project Hygiene
+    Add:
+        versions.tf → provider + Terraform version constraints
+        backend.tf → remote backend definition
+        README.md per module
+        Makefile or shell script for common commands (init, plan, apply)
+    Enable Terraform Cloud or GitHub Actions for CI/CD.
+
+
+7.8️⃣Security & Hardening
+    Enable:
+        EBS encryption with KMS
+        RDS encryption
+        CloudTrail log validation
+        GuardDuty, Security Hub, and AWS Config conformance packs
+📂 Suggested next module: modules/security/

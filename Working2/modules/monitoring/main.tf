@@ -244,9 +244,10 @@ resource "aws_config_configuration_recorder_status" "status" {
 }
 
 # Local dependency for all rules
-locals {
-  config_ready = [aws_config_configuration_recorder_status.status]
-}
+# locals {
+#   # config_ready = [aws_config_configuration_recorder_status.status]
+#   depends_on = [aws_config_configuration_recorder_status.status]
+# }
 
 ########################################
 # 3️⃣ SNS + EVENTBRIDGE ALERTS
@@ -317,7 +318,7 @@ resource "aws_config_config_rule" "s3_bucket_public_read_prohibited" {
     owner             = "AWS"
     source_identifier = "S3_BUCKET_PUBLIC_READ_PROHIBITED"
   }
-  depends_on = local.config_ready
+  depends_on = [aws_config_configuration_recorder_status.status]
   tags       = merge(var.common_tags, { Name = "S3 Bucket Public Read Prohibited" })
 }
 
@@ -327,7 +328,7 @@ resource "aws_config_config_rule" "s3_bucket_public_write_prohibited" {
     owner             = "AWS"
     source_identifier = "S3_BUCKET_PUBLIC_WRITE_PROHIBITED"
   }
-  depends_on = local.config_ready
+  depends_on = [aws_config_configuration_recorder_status.status]
   tags       = merge(var.common_tags, { Name = "S3 Bucket Public Write Prohibited" })
 }
 
@@ -337,7 +338,7 @@ resource "aws_config_config_rule" "encrypted_volumes" {
     owner             = "AWS"
     source_identifier = "ENCRYPTED_VOLUMES"
   }
-  depends_on = local.config_ready
+  depends_on = [aws_config_configuration_recorder_status.status]
   tags       = merge(var.common_tags, { Name = "Encrypted EBS Volumes" })
 }
 
@@ -347,7 +348,7 @@ resource "aws_config_config_rule" "rds_storage_encrypted" {
     owner             = "AWS"
     source_identifier = "RDS_STORAGE_ENCRYPTED"
   }
-  depends_on = local.config_ready
+  depends_on = [aws_config_configuration_recorder_status.status]
   tags       = merge(var.common_tags, { Name = "RDS Storage Encrypted" })
 }
 
@@ -357,7 +358,7 @@ resource "aws_config_config_rule" "restricted_ssh" {
     owner             = "AWS"
     source_identifier = "INCOMING_SSH_DISABLED"
   }
-  depends_on = local.config_ready
+  depends_on = [aws_config_configuration_recorder_status.status]
   tags       = merge(var.common_tags, { Name = "Restricted SSH Access" })
 }
 
@@ -367,7 +368,7 @@ resource "aws_config_config_rule" "cloudtrail_enabled" {
     owner             = "AWS"
     source_identifier = "CLOUD_TRAIL_ENABLED"
   }
-  depends_on = local.config_ready
+  depends_on = [aws_config_configuration_recorder_status.status]
   tags       = merge(var.common_tags, { Name = "CloudTrail Enabled" })
 }
 
@@ -377,6 +378,6 @@ resource "aws_config_config_rule" "iam_password_policy" {
     owner             = "AWS"
     source_identifier = "IAM_PASSWORD_POLICY"
   }
-  depends_on = local.config_ready
+  depends_on = [aws_config_configuration_recorder_status.status]
   tags       = merge(var.common_tags, { Name = "IAM Password Policy Rule" })
 }

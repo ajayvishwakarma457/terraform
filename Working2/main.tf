@@ -94,11 +94,11 @@ module "elasticache" {
 }
 
 
-# module "monitoring" {
-#   source       = "./modules/monitoring"
-#   project_name = var.project_name
-#   aws_region   = var.aws_region
-#   common_tags  = var.common_tags
-#   alert_email  = var.alert_email
-# }
+module "monitoring" {
+  source       = "./modules/monitoring"
+  project_name = var.project_name
+  aws_region   = var.aws_region
+  common_tags  = var.common_tags
+  alert_email  = var.alert_email
+}
 
