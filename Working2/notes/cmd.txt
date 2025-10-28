@@ -6,6 +6,7 @@ terraform validate
 terraform plan -out=tfplan
 terraform apply tfplan
 terraform output rds_endpoint
+terraform plan -lock=false
 
 
 
