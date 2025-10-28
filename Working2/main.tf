@@ -110,7 +110,7 @@ module "cloudfront" {
   # optional: set if you want a specific name
   # bucket_name = "tanvora-cdn-static"
 
-  # 🔐 custom domain (optional)
+  # custom domain (optional)
   # domain_name     = "cdn.tanvora.com"
   # alternate_names = ["static.tanvora.com"]
 
