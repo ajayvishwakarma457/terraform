@@ -127,7 +127,7 @@ module "route53" {
   alb_dns_name = module.scaling.alb_dns_name
   alb_zone_id  = module.scaling.alb_zone_id
 
-  cloudfront_domain_name  = module.cloudfront.cloudfront_domain_name
+  cloudfront_domain_name    = module.cloudfront.cloudfront_domain_name
   cloudfront_hosted_zone_id = "Z2FDTNDATAQYW2" # always same for CloudFront globally
 
   # Optional: if you also have api subdomain
