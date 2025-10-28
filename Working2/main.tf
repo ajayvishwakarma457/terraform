@@ -118,3 +118,26 @@ module "cloudfront" {
   # route53_zone_id = "Z123456ABCDEFG"
 }
 
+module "route53" {
+  source       = "./modules/route53"
+  project_name = var.project_name
+  domain_name  = "spakcommgroup.com"
+  common_tags  = var.common_tags
+
+  alb_dns_name = module.scaling.alb_dns_name
+  alb_zone_id  = module.scaling.alb_zone_id
+
+  cloudfront_domain_name  = module.cloudfront.cloudfront_domain_name
+  cloudfront_hosted_zone_id = "Z2FDTNDATAQYW2" # always same for CloudFront globally
+
+  # Optional: if you also have api subdomain
+  create_api_record = true
+  api_dns_name      = module.scaling.alb_dns_name
+  api_zone_id       = module.scaling.alb_zone_id
+}
+
+
+
+
+
+# YourStrongRedisPassword123

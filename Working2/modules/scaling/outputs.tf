@@ -3,6 +3,12 @@ output "alb_dns_name" {
   description = "DNS name of the Application Load Balancer"
 }
 
+# ALB Hosted Zone ID
+output "alb_zone_id" {
+  value       = aws_lb.app_lb.zone_id
+  description = "Hosted Zone ID for the ALB"
+}
+
 output "alb_arn" {
   value       = aws_lb.app_lb.arn
   description = "ARN of the Application Load Balancer"
