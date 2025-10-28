@@ -1,1 +1,7 @@
 YourStrongRedisPassword123
+
+
+
+mkdir -p kms
+cd kms
+touch main.tf variables.tf outputs.tf README.md

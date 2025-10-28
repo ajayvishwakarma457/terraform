@@ -31,8 +31,6 @@ Pending / Next Steps (to make it fully production-ready)
     Create a CloudWatch Dashboard for quick health overview.
     Suggested module: modules/monitoring/
 
-
-
 3. AWS Backup Policies
     Centralize backups for:
     EC2 (EBS snapshots)
