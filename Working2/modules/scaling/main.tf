@@ -90,24 +90,41 @@ resource "aws_lb_target_group" "app_tg" {
   tags = merge(var.common_tags, { Name = "${var.project_name}-tg" })
 }
 
+# resource "aws_lb_listener" "http" {
+#   load_balancer_arn = aws_lb.app_lb.arn
+#   port              = 80
+#   protocol          = "HTTP"
+
+#   default_action {
+#     type             = "forward"
+#     target_group_arn = aws_lb_target_group.app_tg.arn
+#   }
+# }
+
 resource "aws_lb_listener" "http" {
   load_balancer_arn = aws_lb.app_lb.arn
   port              = 80
   protocol          = "HTTP"
 
   default_action {
-    type             = "forward"
-    target_group_arn = aws_lb_target_group.app_tg.arn
+    type = "redirect"
+    redirect {
+      port        = "443"
+      protocol    = "HTTPS"
+      status_code = "HTTP_301"
+    }
   }
 }
 
+
+# HTTPS listener (uses ACM certificate)
 resource "aws_lb_listener" "https" {
   load_balancer_arn = aws_lb.app_lb.arn
   port              = 443
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-2016-08"
   # certificate_arn   = module.acm.alb_cert_arn
-  certificate_arn   = var.alb_certificate_arn
+  certificate_arn   = var.alb_certificate_arn # coming from ACM module
 
   default_action {
     type             = "forward"
